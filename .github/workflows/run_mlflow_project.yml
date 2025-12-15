@@ -27,9 +27,15 @@ jobs:
           pip install -r MLProject/requirements.txt
           pip install mlflow
 
+      - name: Start MLflow Tracking Server
+        run: |
+          mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns --host 127.0.0.1 --port 5000 &
+          sleep 10  
+
       - name: Run MLflow project (Model Training)
         shell: bash -l {0}
         run: |
+          export MLFLOW_TRACKING_URI=http://127.0.0.1:5000
           mlflow run MLProject --env-manager=local
 
       - name: Get latest MLflow run_id
