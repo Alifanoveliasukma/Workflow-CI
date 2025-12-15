@@ -1,93 +1,28 @@
-name: CI/CD Model Training with MLflow
+name: Run MLflow Project
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
-  train_and_upload:
+  train-model:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-    - name: Install dependencies
-      # Instal dependencies utama untuk menjalankan MLflow
-      run: pip install -r requirements.txt
+      - name: Install MLflow
+        run: pip install mlflow
 
-    - name: Set up Service Account for Google Drive
-      # Menyimpan JSON Key sebagai file lokal
-      run: |
-        echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT_KEY }}' > gdrive-key.json
-        pip install google-api-python-client google-auth-oauthlib pydrive2
-
-    - name: Run MLflow Project (Model Training)
-      # Menjalankan project MLflow. Artefak akan dibuat di mlruns/
-      # Gunakan --no-conda jika Anda hanya mengandalkan venv/pip
-      run: |
-        mlflow run MLProject --no-conda
-
-    - name: Upload Artifacts to Google Drive (Skilled)
-      # Menggunakan script Python untuk upload folder mlruns ke GDrive
-      # Asumsikan ID folder GDrive Anda adalah 'YOUR_GDRIVE_FOLDER_ID'
-      # GANTI 'YOUR_GDRIVE_FOLDER_ID' dengan ID folder yang sudah Anda siapkan
-      run: |
-        cat << EOF > upload_gdrive.py
-        from pydrive2.auth import GoogleAuth
-        from pydrive2.drive import GoogleDrive
-        import os
-
-        TARGET_FOLDER_ID = '1MH40wFiJ_7S8SLSMfTwgzj-jc2RqkvjI' 
-        
-        
-        gauth = GoogleAuth()
-        gauth.setting['service_accoun'] = True
-        gauth.setting['service_account_file'] = 'gdrive-key.json'
-        drive = GoogleDrive(gauth)
-
-        folder_name = 'mlruns'
-        
-        if os.path.isdir(folder_name):
-            print(f"Uploading folder: {folder_name}...")
-            file_list = drive.ListFile({'q': f"'{TARGET_FOLDER_ID}' in parents and trashed=false and title='{folder_name}'"}).GetList()
-            if not file_list:
-                folder_metadata = {'title': folder_name, 'parents': [{'id': TARGET_FOLDER_ID}], 'mimeType': 'application/vnd.google-apps.folder'}
-                folder = drive.CreateFile(folder_metadata)
-                folder.Upload()
-                folder_id = folder['id']
-                print(f"Created folder {folder_name} with ID: {folder_id}")
-            else:
-                folder_id = file_list[0]['id']
-                print(f"Folder {folder_name} already exists. Uploading contents inside.")
-
-            for root, _, files in os.walk(folder_name):
-                for file_name in files:
-                    file_path = os.path.join(root, file_name)
-                    # Upload file, simpan di subfolder
-                    gfile = drive.CreateFile({'title': file_name, 'parents': [{'id': folder_id}]})
-                    gfile.SetContentFile(file_path)
-                    gfile.Upload()
-                    print(f"Uploaded: {file_name}")
-        else:
-            print("mlruns folder not found. Skipping upload.")
-
-        EOF
-        
-        python upload_gdrive.py
-        # Hapus kunci service account setelah selesai
-        rm gdrive-key.json
-
-    # - name: Post Run (Optional: Upload Model Artefact as CI Artefact)
-    #   # Upload folder mlruns sebagai artefak di GitHub Actions untuk debugging
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: mlflow-artifacts
-    #     path: mlruns
+      - name: Run MLflow Project
+        run: |
+          cd MLProject
+          mlflow run .
