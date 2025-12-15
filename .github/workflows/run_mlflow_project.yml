@@ -30,7 +30,7 @@ jobs:
       - name: Run MLflow project (Model Training)
         shell: bash -l {0}
         run: |
-          mlflow run MLProject 
+          mmlflow run MLProject --env-manager=local
 
       - name: Get latest MLflow run_id
         run: |
