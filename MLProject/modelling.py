@@ -26,8 +26,3 @@ with mlflow.start_run():
 
     print("MSE:", mse)
     print("R2:", r2)
-
-    mlflow.sklearn.log_model(
-        sk_model=model,
-        artifact_path="model"
-    )
