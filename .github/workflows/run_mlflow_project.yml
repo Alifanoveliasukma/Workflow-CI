@@ -11,20 +11,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Run actions/checkout@v3
         uses: actions/checkout@v3
 
-      - name: Set up Miniconda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
         with:
-          miniforge-variant: Mambaforge
-          miniforge-version: '23.1.0-1'
+          python-version: "3.12"
 
-      - name: Install MLflow
-        run: pip install mlflow
-
-      - name: Run MLflow Project
-        shell: bash -l {0}
+      - name: Check Env
         run: |
-          cd MLProject
-          mlflow run .
+          python --version
+          pip --version
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install mlflow
+
+      - name: Run MLflow project
+        run: |
+          mlflow run MLProject
+
+      - name: Get latest MLflow run_id
+        run: |
+          RUN_ID=$(mlflow search | head -n 2 | tail -n 1 | awk '{print $1}')
+          echo "Latest run ID: $RUN_ID"
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
