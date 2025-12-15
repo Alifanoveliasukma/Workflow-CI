@@ -24,6 +24,7 @@ jobs:
         run: pip install mlflow
 
       - name: Run MLflow Project
+        shell: bash -l {0}
         run: |
           cd MLProject
           mlflow run .
