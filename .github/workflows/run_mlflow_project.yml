@@ -2,22 +2,20 @@ name: Run MLflow Project
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   train-model:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Run actions/checkout@v3
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: "3.12"
+          python-version: '3.12'
 
       - name: Check Env
         run: |
@@ -29,9 +27,9 @@ jobs:
           pip install -r MLProject/requirements.txt
           pip install mlflow
 
-      - name: Run MLflow project
+      - name: Run MLflow project (no conda)
         run: |
-          mlflow run MLProject
+          mlflow run MLProject --no-conda
 
       - name: Get latest MLflow run_id
         run: |
